@@ -1,8 +1,9 @@
 const fs = require('fs');
 const HTMLParser = require('node-html-parser');
-const notifier = require('node-notifier');
 
 const getValues = require("./fetch");
+const sendPush = require("./push");
+const sentMessageFromTelegram = require("./telegram");
 
 const checkAvito = async () => {
     const values = await getValues();
@@ -26,12 +27,11 @@ const checkAvito = async () => {
 
             const link = items[0].querySelector('a[data-marker="item-title"]');
             const price = items[0].querySelector('[itemprop="price"]');
+            const title = `${link._attrs.title} - ${price._attrs.content}₽`;
+            const fullLink = `https://www.avito.ru/${link._attrs.href}`;
 
-            notifier.notify({
-                title: "Avito Parser",
-                text: `${link._attrs.title} - ${price._attrs.content}₽`,
-                open: `https://www.avito.ru/${link._attrs.href}`
-            });
+            sendPush({title, link: fullLink});
+            sentMessageFromTelegram({title, link: fullLink});
 
             fs.writeFile('message.txt', JSON.stringify(obj), (err) => {
                 if (err) throw err;
